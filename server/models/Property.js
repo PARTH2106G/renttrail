@@ -10,4 +10,7 @@ const propertySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+propertySchema.index({ landlordId: 1, createdAt: -1 });
+propertySchema.index({ landlordId: 1, status: 1 });
+
 module.exports = mongoose.model('Property', propertySchema);
