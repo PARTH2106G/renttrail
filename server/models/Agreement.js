@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const agreementSchema = new mongoose.Schema(
   {
+    landlordId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
     propertyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Property', required: true },
     tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true },
     rentAmount: { type: Number, required: true },
@@ -18,5 +19,9 @@ const agreementSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+agreementSchema.index({ landlordId: 1, createdAt: -1 });
+agreementSchema.index({ propertyId: 1, agreementStatus: 1 });
+agreementSchema.index({ tenantId: 1, agreementStatus: 1 });
 
 module.exports = mongoose.model('Agreement', agreementSchema);

@@ -5,6 +5,7 @@ Landlord-tenant document, verification & rent-cycle manager. Built to solve a re
 ## What's included
 
 - **`/server`** — Express + MongoDB REST API, MVC structure, JWT auth, all 7 core models (User, Property, Tenant, Agreement, Verification, RentPayment, EventLog), a working Agreement CRUD flow that auto-generates the rent-payment schedule, a state-machine-enforced Verification tracker, and a node-cron job that flags overdue rent daily.
+- **Security hardening (Phase 1)** — Zod request validation, ownership checks on protected resources, rate-limited auth, Helmet headers, scoped CORS, and startup JWT secret validation in production.
 - **`/client`** — placeholder for your React app (not scaffolded here — use `npx create-react-app client` or Vite, then drop in the Dockerfile already provided).
 - **`docker-compose.yml`** — spins up MongoDB, the API, and the client together.
 
@@ -19,6 +20,10 @@ npm run dev                # requires MongoDB running locally, or point MONGO_UR
 
 API health check: `GET http://localhost:5000/api/health`
 
+### Production secret guard
+
+In `NODE_ENV=production`, the server refuses startup if `JWT_SECRET` is missing or still a placeholder value.
+
 ## Quick start (Docker)
 
 ```bash
@@ -30,13 +35,15 @@ docker compose up --build
 
 | Method | Route | Purpose |
 |---|---|---|
-| POST | `/api/auth/register` | Create landlord/manager account |
+| POST | `/api/auth/register` | Create landlord account (public role escalation blocked) |
 | POST | `/api/auth/login` | Get JWT |
 | GET/POST | `/api/properties` | List / add properties |
 | PUT | `/api/properties/:id` | Update property |
 | GET/POST | `/api/agreements` | List / create agreement (auto-generates rent schedule) |
 | GET/PUT | `/api/agreements/:id` | Read / update one agreement |
 | PATCH | `/api/agreements/:id/terminate` | End an agreement, logs the event |
+| GET/POST | `/api/tenants` | List / create tenants (owner-scoped) |
+| GET/PUT/DELETE | `/api/tenants/:id` | Tenant CRUD (owner-scoped) |
 | POST | `/api/verifications` | Start a verification record |
 | GET | `/api/verifications/agreement/:agreementId` | Check verification status |
 | PATCH | `/api/verifications/:id/stage` | Move through submitted → in_review → cleared/flagged |
@@ -45,13 +52,23 @@ docker compose up --build
 | POST | `/api/event-logs` | Log a repair/notice/inspection event |
 | GET | `/api/event-logs/agreement/:agreementId` | Dispute-ready event history |
 
-## What's intentionally NOT built yet (your team's actual sprint work)
+## Notes and limitations
 
-- Tenant CRUD routes/controller (same pattern as Property — good first task to split across teammates)
-- PDF agreement generation (PDFKit is already a dependency)
-- File upload to S3 for verification documents/inventory photos (Multer is already a dependency)
-- The React frontend
-- Real reminder dispatch (email/SMS/WhatsApp) inside `rentReminderJob.js` — currently only flags overdue status
+- No public manager/admin assignment route is exposed. Privileged role assignment must be done through a future explicit administrative flow.
+- Agreement creation attempts a MongoDB transaction and safely falls back to sequential writes when transactions are unavailable (for example, standalone MongoDB in local Docker).
+- Full frontend implementation is still intentionally out of scope for this phase.
+
+## Tests
+
+```bash
+cd server
+npm test
+```
+
+- Tests include validation and rent schedule coverage by default.
+- Integration assertions run when MongoDB is reachable:
+  - either via `mongodb-memory-server` binary download
+  - or via `TEST_MONGO_URI=<your-mongo-uri> npm test`
 
 ---
 

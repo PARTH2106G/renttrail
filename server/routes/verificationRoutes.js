@@ -6,10 +6,17 @@ const {
   updateStage,
 } = require('../controllers/verificationController');
 const { protect } = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const {
+  verificationCreateSchema,
+  verificationUpdateStageSchema,
+  idParamSchema,
+  agreementIdParamSchema,
+} = require('../validation/schemas');
 
 router.use(protect);
-router.post('/', createVerification);
-router.get('/agreement/:agreementId', getVerificationByAgreement);
-router.patch('/:id/stage', updateStage);
+router.post('/', validate(verificationCreateSchema), createVerification);
+router.get('/agreement/:agreementId', validate(agreementIdParamSchema, 'params'), getVerificationByAgreement);
+router.patch('/:id/stage', validate(idParamSchema, 'params'), validate(verificationUpdateStageSchema), updateStage);
 
 module.exports = router;

@@ -21,4 +21,7 @@ const verificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+verificationSchema.index({ agreementId: 1 });
+verificationSchema.index({ stage: 1, updatedAt: -1 });
+
 module.exports = mongoose.model('Verification', verificationSchema);
