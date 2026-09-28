@@ -3,15 +3,13 @@ version: '3.8'
 services:
   mongo:
     image: mongo:7
-    container_name: renttrail-mongo
-    ports:
-      - "27017:27017"
+    restart: unless-stopped
     volumes:
       - mongo-data:/data/db
 
   server:
     build: ./server
-    container_name: renttrail-server
+    restart: unless-stopped
     ports:
       - "5000:5000"
     env_file:
@@ -21,7 +19,7 @@ services:
 
   client:
     build: ./client
-    container_name: renttrail-client
+    restart: unless-stopped
     ports:
       - "3000:80"
     depends_on:
