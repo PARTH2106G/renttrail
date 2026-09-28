@@ -12,6 +12,7 @@ const tenantRoutes = require('./routes/tenantRoutes');
 const verificationRoutes = require('./routes/verificationRoutes');
 const rentPaymentRoutes = require('./routes/rentPaymentRoutes');
 const eventLogRoutes = require('./routes/eventLogRoutes');
+const { apiLimiter } = require('./middleware/rateLimitMiddleware');
 
 require('./jobs/rentReminderJob');
 
@@ -50,6 +51,7 @@ const ensureJwtSecret = () => {
 app.use(helmet());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
+app.use('/api', apiLimiter);
 
 app.get('/api/health', (req, res) => {
   const dbReady = mongoose.connection.readyState === 1;

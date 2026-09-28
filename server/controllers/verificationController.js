@@ -1,5 +1,6 @@
 const Verification = require('../models/Verification');
 const { canAccessAgreement } = require('../utils/ownership');
+const { toObjectId } = require('../utils/objectId');
 
 const ALLOWED_TRANSITIONS = {
   submitted: ['in_review'],
@@ -11,12 +12,13 @@ const ALLOWED_TRANSITIONS = {
 exports.createVerification = async (req, res, next) => {
   try {
     await canAccessAgreement(req.body.agreementId, req.user.id);
-    const existing = await Verification.findOne({ agreementId: req.body.agreementId });
+    const agreementObjectId = toObjectId(req.body.agreementId, 'agreementId');
+    const existing = await Verification.findOne({ agreementId: agreementObjectId });
     if (existing) {
       return res.status(409).json({ message: 'Verification already exists for this agreement' });
     }
 
-    const verification = await Verification.create(req.body);
+    const verification = await Verification.create({ ...req.body, agreementId: agreementObjectId });
     res.status(201).json(verification);
   } catch (err) {
     next(err);
